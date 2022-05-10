@@ -3,7 +3,6 @@ import {assert} from "https://deno.land/std@0.136.0/_util/assert.ts";
 import {
     Room,
     RoomEvent,
-    TsMapHelper,
     User,
     UserAddress,
     UserAddressOptions,
@@ -52,6 +51,10 @@ export class RoomManager {
 
     constructor() {
         this.rooms = new Map<string, Room>();
+    }
+
+    public getRoom(roomId: string): Room {
+        return this.rooms.get(roomId) as Room;
     }
 
     public createRoom(): string {
@@ -154,6 +157,11 @@ export const getRemoteAddress = (connInfo: ConnInfo): Deno.NetAddr => {
     return connInfo.remoteAddr;
 }
 
+export interface TsMapHelper {
+    dataType: string;
+    value: Array<any>;
+}
+
 export function replacer(key: string, value: Object): TsMapHelper | Object {
     if (value instanceof Map) {
         return {
@@ -163,6 +171,16 @@ export function replacer(key: string, value: Object): TsMapHelper | Object {
     } else {
         return value;
     }
+}
+
+export const reviver = (key: string, value: Object): unknown => {
+    if(value === 'object' && value !== null) {
+        let tsMapHelper = value as TsMapHelper;
+        if (tsMapHelper.dataType === 'Map') {
+            return new Map(tsMapHelper.value);
+        }
+    }
+    return value;
 }
 
 // Workaround for the fact that js/ts can't serialize/deserialize maps
@@ -194,6 +212,11 @@ export const notFound: Response = new Response("", {
 export const roomCreated = (roomId: string): Response =>
     new Response(roomId, {status: 201, headers: {"content-type": "application/json",},});
 
+export const roomFound = (room: Room): Response => new Response(stringify(room), {
+    status: 200,
+    headers: {"content-type": "application/json",},
+});
+
 export const createRoomFetch = async (options: { env: "local" | "prod" }): Promise<string> => {
     const url: string = getUrl(options.env).concat("/api/v1/create-room");
     const response = await fetch(url, {method: 'POST', headers: {'Content-Type': 'text/plain',}});
@@ -202,8 +225,8 @@ export const createRoomFetch = async (options: { env: "local" | "prod" }): Promi
 
 export const getRoomFetch = async (id: string, options: { env: "local" | "prod" }): Promise<Room> => {
     const url: string = getUrl(options.env).concat(`/api/v1/${id}`);
-    const jsonResponse = await fetch(url);
-    return await jsonResponse.json() as Room;
+    const response: Response = await fetch(url);
+    return await JSON.parse(await response.text(), reviver) as Room;
 }
 
 export const getUrl = (env: string): string => {

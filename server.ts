@@ -1,5 +1,13 @@
 import {ConnInfo, serve} from "https://deno.land/std@0.136.0/http/server.ts";
-import {createUser, notFound, roomCreated, RoomManager, roomWsConnectPattern} from "./mod.ts";
+import {
+    createUser,
+    getRoomPathPattern,
+    notFound,
+    roomCreated,
+    roomFound,
+    RoomManager,
+    roomWsConnectPattern
+} from "./mod.ts";
 
 const roomManager: RoomManager = new RoomManager();
 
@@ -10,7 +18,14 @@ const handle = async (req: Request, connInfo: ConnInfo): Promise<Response> => {
             if (pathname === "/api/v1/create-room") return roomCreated(roomManager.createRoom());
             return notFound;
         case "GET":
-            if  (roomWsConnectPattern.test(req.url)) {
+            if (getRoomPathPattern.test(req.url)) {
+                const roomId: string | undefined = getRoomPathPattern.exec(req.url)?.pathname.groups.id;
+
+                if (roomId == null || !roomManager.doesRoomExist(roomId)) {
+                    return notFound;
+                }
+                return roomFound(roomManager.getRoom(roomId));
+            } else if  (roomWsConnectPattern.test(req.url)) {
                 const roomId: string | undefined = roomWsConnectPattern.exec(req.url)?.pathname.groups.id;
 
                 if (roomId == null || !roomManager.doesRoomExist(roomId)) {
