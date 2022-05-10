@@ -195,14 +195,14 @@ export const roomCreated = (roomId: string): Response =>
     new Response(roomId, {status: 201, headers: {"content-type": "application/json",},});
 
 export const createRoomFetch = async (options: { env: "local" | "prod" }): Promise<string> => {
-    const url: string = getUrl(options.env).concat("/create-room");
+    const url: string = getUrl(options.env).concat("/api/v1/create-room");
     const jsonResponse = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json',}});
     const jsonData = await jsonResponse.json();
     return jsonData.toString();
 }
 
 export const getRoomFetch = async (id: string, options: { env: "local" | "prod" }): Promise<Room> => {
-    const url: string = getUrl(options.env).concat(`/${id}`);
+    const url: string = getUrl(options.env).concat(`/api/v1/${id}`);
     const jsonResponse = await fetch(url);
     return await jsonResponse.json() as Room;
 }
