@@ -14,10 +14,12 @@ import {
 import {getRandyUsernameFetch} from "https://raw.githubusercontent.com/ukaj808/augslink-randy/master/mod.ts";
 
 export const createUser = async (req: Request, connInfo: ConnInfo, options: UserOptions): Promise<{ user: User, response: Response }> => {
+    const profile: "local" | "prod" = Deno.env.get("profile") != null ?
+        Deno.env.get("profile") === "prod" ? "prod" : "local" : "local";
     const {hostname, port} = getRemoteAddress(connInfo);
     const {response, socket} = Deno.upgradeWebSocket(req);
     const userId: string = crypto.randomUUID();
-    const username: string = await getRandyUsernameFetch({env: "local"});
+    const username: string = await getRandyUsernameFetch({env: profile});
 
     socket.onopen = options.onJoin;
     socket.onclose = options.onLeave;
