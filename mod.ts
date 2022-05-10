@@ -196,9 +196,8 @@ export const roomCreated = (roomId: string): Response =>
 
 export const createRoomFetch = async (options: { env: "local" | "prod" }): Promise<string> => {
     const url: string = getUrl(options.env).concat("/api/v1/create-room");
-    const jsonResponse = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json',}});
-    const jsonData = await jsonResponse.json();
-    return jsonData.toString();
+    const response = await fetch(url, {method: 'POST', headers: {'Content-Type': 'text/plain',}});
+    return await response.text();
 }
 
 export const getRoomFetch = async (id: string, options: { env: "local" | "prod" }): Promise<Room> => {
