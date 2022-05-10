@@ -12,12 +12,13 @@ import {
     UserOptions,
     UserWelcomeEvent
 } from "https://raw.githubusercontent.com/ukaj808/augslink-lib/master/mod.ts";
+import {getRandyUsernameFetch} from "https://raw.githubusercontent.com/ukaj808/augslink-randy/master/mod.ts";
 
-export const createUser = (req: Request, connInfo: ConnInfo, options: UserOptions): { user: User, response: Response } => {
+export const createUser = async (req: Request, connInfo: ConnInfo, options: UserOptions): Promise<{ user: User, response: Response }> => {
     const {hostname, port} = getRemoteAddress(connInfo);
     const {response, socket} = Deno.upgradeWebSocket(req);
     const userId: string = crypto.randomUUID();
-    const username: string = generateRandomUsername();
+    const username: string = await getRandyUsernameFetch({env: "local"});
 
     socket.onopen = options.onJoin;
     socket.onclose = options.onLeave;
@@ -179,10 +180,6 @@ export const generateId = (length: number) => {
     }
     return result;
 }
-
-export const usernameTxtFile: string = await Deno.readTextFile("./assets/gamertags.txt");
-export const usernames: string[] = usernameTxtFile.split('\n');
-export const generateRandomUsername = () => usernames[Math.floor(Math.random() * usernames.length)];
 
 const profile = Deno.env.get("profile");
 const wsProtocol =  (profile != null && profile === "prod") ? "wss" : "ws";

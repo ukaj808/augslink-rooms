@@ -3,7 +3,7 @@ import {createUser, notFound, roomCreated, RoomManager, roomWsConnectPattern} fr
 
 const roomManager: RoomManager = new RoomManager();
 
-const handle = (req: Request, connInfo: ConnInfo): Response => {
+const handle = async (req: Request, connInfo: ConnInfo): Promise<Response> => {
     const pathname = new URL(req.url).pathname;
     switch(req.method) {
         case "POST":
@@ -17,7 +17,7 @@ const handle = (req: Request, connInfo: ConnInfo): Response => {
                     return notFound;
                 }
 
-                const { user, response } = createUser(req, connInfo, {
+                const { user, response } = await createUser(req, connInfo, {
                     onJoin: () => roomManager.joinRoom(roomId, user),
                     onLeave: () => roomManager.leaveRoom(roomId, user)
                 });
